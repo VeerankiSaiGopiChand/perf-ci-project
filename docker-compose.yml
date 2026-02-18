@@ -1,0 +1,33 @@
+services:
+
+  nginx:
+    build: ./app
+    container_name: perf-nginx
+    ports:
+      - "8080:80"
+
+  mysql:
+    image: mysql:8.0
+    container_name: perf-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: testdb
+
+  jmeter:
+    image: justb4/jmeter:latest
+    container_name: perf-jmeter
+    depends_on:
+      - nginx
+    volumes:
+      - ./jmeter:/tests
+      - ./reports:/results
+    entrypoint: >
+      sh -c "
+      sleep 20 &&
+      jmeter -n
+      -t /tests/Eph_Per_Local.jmx
+      -l /results/results.jtl
+      -e
+      -o /results/report
+      -f
+      "
